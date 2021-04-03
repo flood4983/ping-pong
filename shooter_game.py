@@ -7,9 +7,9 @@ from time import time as timer
 
 #шрифты и надписи
 font.init()
-font1 = font.SysFont("Arial", 80)
-win = font1.render('YOU WIN!', True, (255, 255, 255))
-lose = font1.render('YOU LOSE!', True, (180, 0, 0))
+font1 = font.SysFont("Arial", 36)
+Player_L_lose = font1.render('Player_l Lose!', True, (0, 0, 0))
+Player_R_lose = font1.render('Player_r Lose!', True, (0, 0, 0))
 font2 = font.SysFont("Arial", 36)
 
 # нам нужны такие картинки:
@@ -17,7 +17,7 @@ font2 = font.SysFont("Arial", 36)
 img_back = "fon.jpg" #фон
 img_hero_l = "player_l.png"
 img_hero_r = "player_r.png" # герой
-
+img_ball = "ball.png"
 
 # класс-родитель для других спрайтов
 class GameSprite(sprite.Sprite):
@@ -56,15 +56,9 @@ class Player(GameSprite):
         if keys[K_s] and self.rect.y < win_height - 80:
             self.rect.y += self.speed
 
-class Aster(GameSprite):
-    # движение врага
-    def update(self):
-        self.rect.y += self.speed
-        global lost
+        
         # исчезает, если дойдет до края экрана
-        if self.rect.y > win_height:
-            self.rect.x = randint(80, win_width - 80)
-            self.rect.y = 0
+        
             
 
 # класс спрайта-врага   
@@ -83,28 +77,45 @@ background = transform.scale(image.load(img_back), (win_width, win_height))
 # создаем спрайты
 player_l = Player(img_hero_l, 15, win_height - 100, 15, 100, 10)
 player_r = Player(img_hero_r, 665, win_height - 100, 15, 100, 10)
+ball = GameSprite(img_ball, 350, win_height - 250, 75, 100, 15)
 
 # переменная "игра закончилась": как только там True, в основном цикле перестают работать спрайты
 finish = False
+clock = time.Clock()
+FPS = 120
 # Основной цикл игры:
-run = True # флаг сбрасывается кнопкой закрытия окна
-num_fire = 0
+run = True # флаг сбрасывается кнопкой закрытия окна=
 reload = False
+speed_x = 5
+speed_y = 5
 while run:
     # событие нажатия на кнопку Закрыть
     for e in event.get():
         if e.type == QUIT:
             run = False
         # событие нажатия на пробел - спрайт стреляет
+    if not finish:
+        ball.rect.x += speed_x
+        if ball.rect.y <0 or ball.rect.y > win_height-100:
+            speed_y *= -1
+        ball.rect.y += speed_y 
+        if sprite.collide_rect(player_l, ball) or sprite.collide_rect(player_r, ball):
+            speed_x *= -1     
        
-                
 
-    window.blit(background, (0,0))            
-    player_l.uprav_l()
-    player_r.uprav_r()
-    player_l.reset()
-    player_r.reset()
-    display.update()
+        window.blit(background, (0,0))        
+        if ball.rect.x <=0:
+            window.blit(Player_L_lose, (250, 250))
+            finish = True
+        if ball.rect.x >= 625:
+            window.blit(Player_R_lose, (250, 250))  
+            finish = True 
+        player_l.uprav_l()
+        player_r.uprav_r()
+        ball.reset()
+        player_l.reset()
+        player_r.reset()
+        display.update()
 
         
 
@@ -133,3 +144,4 @@ while run:
         
     # цикл срабатывает каждую 0.05 секунд
     time.delay(50)
+    clock.tick(FPS)
